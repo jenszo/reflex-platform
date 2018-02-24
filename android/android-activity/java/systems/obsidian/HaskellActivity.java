@@ -10,12 +10,21 @@ import java.util.concurrent.SynchronousQueue;
 import android.content.pm.PackageManager;
 import android.Manifest;
 import android.webkit.PermissionRequest;
+import android.provider.Settings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.HashSet;
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.content.Context;
+import android.os.PowerManager;
+import android.net.Uri;
+import android.app.NotificationManager;
+import android.R;
+
+// import android.app.Service;
+// import android.os.IBinder;
 
 public class HaskellActivity extends Activity {
   public native int haskellStartMain(SynchronousQueue<Long> setCallbacks);
@@ -71,10 +80,54 @@ public class HaskellActivity extends Activity {
       //TODO: Should we do something with this?
     }
   }
+  private boolean isIgnoringBatteryOptimizations() {
+    Context context=this;
+    String packageName = context.getPackageName();
+    PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+    return pm.isIgnoringBatteryOptimizations(packageName);
+  }
+
+  private void askIgnoreBatteryOptimizations() {
+      try {
+        if(isIgnoringBatteryOptimizations())
+            Log.d("HaskellActivity", "We are ignoring doze!!!!! Yeah!");
+        else {
+            Log.d("HaskellActivity", "We are not ignoring doze!!!!! Oh noooooooo!");
+            // Intent intentBattery = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            Intent intentBattery = new Intent( Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                                                , Uri.parse("package:" + getPackageName())
+                                                );
+            startActivity(intentBattery);
+            // serviceIntent = new Intent(this, HaskellService.class);
+            // Context.startForegroundService(serviceIntent);
+        }
+      }
+      catch (NoSuchMethodError e) {
+          Log.d("HaskellActivity", "Asking for ignore battery optimizations failed. (Not supported and thus irrelevant ;-) ");
+      }
+  }
+
+    // private void showRunningNotification() {
+    //     Intent intent = new Intent(this, HaskellActivity.class);
+    //     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+    //     Notification notification =
+    //         new Notification.Builder(this)
+    //         .setSmallIcon(R.drawable.ic_menu_camera)
+    //         .setContentTitle("Gonimo running")
+    //         .setContentText("I18N Taking care of your kids.")
+    //         .setContentIntent(pendingIntent)
+    //         .build();
+    //     // notification.flags = Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT | 64; // Is foreground notification. (Constant not available on earlier Androids)
+    //     NotificationManager notificationManager = getSystemService(NotificationManager.class);
+    //     notificationManager.notify(notificationId, notification);
+    // }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // showRunningNotification();
+    askIgnoreBatteryOptimizations();
     // We can't call finish() in the constructor, as it will have no effect, so
     // we call it here whenever we reach this code without having hit
     // 'continueWithCallbacks'
@@ -124,6 +177,7 @@ public class HaskellActivity extends Activity {
   @Override
   public void onDestroy() {
     super.onDestroy();
+    // stopService(serviceIntent);
     if(callbacks != 0) {
       haskellOnDestroy(callbacks);
     }
@@ -236,4 +290,34 @@ public class HaskellActivity extends Activity {
 
   private HashMap<Integer, PermissionRequest> permissionRequests;
   private int nextRequestCode = 0;
+  final static int notificationId = 31415926;
+  // private Intent serviceIntent;
 }
+
+// class HaskellService extends Service {
+
+
+//     @Override
+//     public int onStartCommand(Intent intent, int flags, int startId) {
+//         super.onStartCommand(intent, flags, startId);
+//         Intent notificationIntent = new Intent(this, HaskellActivity.class);
+
+//         Notification notification =
+//             new Notification.Builder(this)
+//             .setContentTitle("Gonimo running")
+//             .setContentText("Gonimo still running")
+//             .build();
+
+//         startForeground(1, notification);
+//         // If we get killed, after returning from here, restart
+//         return START_STICKY;
+//     }
+
+//     @Override
+//     public IBinder onBind(Intent intent) {
+//         // A client is binding to the service with bindService()
+//         return null;
+//     }
+
+
+// }
