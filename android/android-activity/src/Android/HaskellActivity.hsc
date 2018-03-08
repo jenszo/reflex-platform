@@ -3,11 +3,14 @@ module Android.HaskellActivity
   ( ActivityCallbacks (..)
   , HaskellActivity (..)
   , getHaskellActivity
+  , getFilesDir
+  , getCacheDir
   , continueWithCallbacks
   , traceActivityCallbacks
   ) where
 
 import Control.Exception
+import Control.Monad
 import Data.Default
 import Data.Monoid
 import Debug.Trace
@@ -21,6 +24,35 @@ import Foreign.Storable
 newtype HaskellActivity = HaskellActivity { unHaskellActivity :: Ptr HaskellActivity }
 
 foreign import ccall unsafe "HaskellActivity_get" getHaskellActivity :: IO HaskellActivity
+
+foreign import ccall unsafe "HaskellActivity_getFilesDir" getFilesDirCString
+  :: HaskellActivity
+  -> IO CString
+
+foreign import ccall unsafe "HaskellActivity_getCacheDir" getCacheDirCString
+  :: HaskellActivity
+  -> IO CString
+
+-- | Copy a C string into Haskell returning 'Nothing' if it is NULL.
+peekMaybeCString :: CString -> IO (Maybe String)
+peekMaybeCString str =
+  if str == nullPtr
+  then return Nothing
+  else Just <$> peekCString str
+
+-- | Get the "internal" storage directory for the app. This is where data local
+-- to the app should be stored. Note that 'Nothing' is returned if the activity
+-- is not fully initalized. In practice this means you probably need to call
+-- this inside the main widget.
+getFilesDir :: HaskellActivity -> IO (Maybe FilePath)
+getFilesDir = getFilesDirCString >=> peekMaybeCString
+
+-- | Get the cache storage directory for the app. Android may delete this data
+-- at any time. Note that 'Nothing' is returned if the activity is not fully
+-- initalized. In practice this means you probably need to call this inside the
+-- main widget.
+getCacheDir :: HaskellActivity -> IO (Maybe FilePath)
+getCacheDir = getCacheDirCString >=> peekMaybeCString
 
 -- | Allow the HaskellActivity to proceed.  The given callbacks will be invoked
 -- at the appropriate times in the Android Activity lifecycle.
@@ -40,6 +72,7 @@ data ActivityCallbacks = ActivityCallbacks
   , _activityCallbacks_onStop :: IO ()
   , _activityCallbacks_onDestroy :: IO ()
   , _activityCallbacks_onRestart :: IO ()
+  , _activityCallbacks_onBackPressed :: IO ()
   , _activityCallbacks_onNewIntent :: String -> String -> IO ()
   }
 
@@ -53,6 +86,7 @@ instance Default ActivityCallbacks where
     , _activityCallbacks_onStop = return ()
     , _activityCallbacks_onDestroy = return ()
     , _activityCallbacks_onRestart = return ()
+    , _activityCallbacks_onBackPressed = return ()
     , _activityCallbacks_onNewIntent = \_ _ -> return ()
     }
 
@@ -89,6 +123,7 @@ activityCallbacksToPtrs ac = ActivityCallbacksPtrs
   <*> wrapIO (_activityCallbacks_onStop ac)
   <*> wrapIO (_activityCallbacks_onDestroy ac)
   <*> wrapIO (_activityCallbacks_onRestart ac)
+  <*> wrapIO (_activityCallbacks_onBackPressed ac)
   <*> wrapCStringCStringIO (\a b -> do
                                a' <- peekCString a
                                b' <- peekCString b
@@ -103,6 +138,7 @@ data ActivityCallbacksPtrs = ActivityCallbacksPtrs
   , _activityCallbacksPtrs_onStop :: FunPtr (IO ())
   , _activityCallbacksPtrs_onDestroy :: FunPtr (IO ())
   , _activityCallbacksPtrs_onRestart :: FunPtr (IO ())
+  , _activityCallbacksPtrs_onBackPressed :: FunPtr (IO ())
   , _activityCallbacksPtrs_onNewIntent :: FunPtr (CString -> CString -> IO ())
   }
 
@@ -118,6 +154,7 @@ instance Storable ActivityCallbacksPtrs where
     #{poke ActivityCallbacks, onStop} p $ _activityCallbacksPtrs_onStop ac
     #{poke ActivityCallbacks, onDestroy} p $ _activityCallbacksPtrs_onDestroy ac
     #{poke ActivityCallbacks, onRestart} p $ _activityCallbacksPtrs_onRestart ac
+    #{poke ActivityCallbacks, onBackPressed} p $ _activityCallbacksPtrs_onBackPressed ac
     #{poke ActivityCallbacks, onNewIntent} p $ _activityCallbacksPtrs_onNewIntent ac
   peek p = ActivityCallbacksPtrs
     <$> #{peek ActivityCallbacks, onCreate} p
@@ -128,4 +165,5 @@ instance Storable ActivityCallbacksPtrs where
     <*> #{peek ActivityCallbacks, onStop} p
     <*> #{peek ActivityCallbacks, onDestroy} p
     <*> #{peek ActivityCallbacks, onRestart} p
+    <*> #{peek ActivityCallbacks, onBackPressed} p
     <*> #{peek ActivityCallbacks, onNewIntent} p

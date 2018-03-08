@@ -230,6 +230,7 @@ let overrideCabal = pkg: f: if pkg == null then null else haskellLib.overrideCab
 
         base-compat = self.callHackage "base-compat" "0.9.2" {};
         constraints = self.callHackage "constraints" "0.9" {};
+        servant-auth-server = self.callHackage "servant-auth-server" "0.3.1.0" {};
         vector = doJailbreak super.vector;
         these = doJailbreak super.these;
         aeson-compat = doJailbreak super.aeson-compat;
@@ -323,6 +324,12 @@ let overrideCabal = pkg: f: if pkg == null then null else haskellLib.overrideCab
         blaze-builder-enumerator = doJailbreak super.blaze-builder-enumerator;
         process-extras = dontCheck super.process-extras;
         miso = addBuildDepend (self.callHackage "miso" "0.12.0.0" {}) self.ghcjs-base;
+        direct-sqlite = self.callCabal2nix "direct-sqlite" (fetchFromGitHub {
+          owner = "obsidiansystems";
+          repo = "direct-sqlite";
+          rev = "cd96a9ae47c9921ab98379a812c99d5d9a365732";
+          sha256 = "1r3msr5j862kvng5xv2b6vgpjc39kd5aygylx9lcvd6rzl8jglfw";
+        }) {};
 
         ########################################################################
         # Packages not in hackage

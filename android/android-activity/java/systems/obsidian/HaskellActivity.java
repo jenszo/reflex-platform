@@ -36,6 +36,7 @@ public class HaskellActivity extends Activity {
   public native void haskellOnStop(long callbacks);
   public native void haskellOnDestroy(long callbacks);
   public native void haskellOnRestart(long callbacks);
+  public native void haskellOnBackPressed(long callbacks);
   public native void haskellOnNewIntent(long callbacks, String intent, String intentdata);
 
   // Apparently 'long' is the right way to store a C pointer in Java
@@ -195,8 +196,9 @@ public class HaskellActivity extends Activity {
 
   @Override
   public void onBackPressed() {
-    // TODO: Pass to app somehow.
-    return;
+    if(callbacks != 0) {
+      haskellOnBackPressed(callbacks);
+    }
   }
 
   @Override
