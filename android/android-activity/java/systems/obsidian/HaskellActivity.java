@@ -164,7 +164,7 @@ public class HaskellActivity extends Activity {
   }
 
   private void grabWakeLock() {
-      PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+      PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(POWER_SERVICE);
       if (powerManager != null) {
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                                                     "MyWakelockTag");
@@ -172,7 +172,7 @@ public class HaskellActivity extends Activity {
             wakeLock.acquire();
       }
 
-      WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+      WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
       if (wifiManager != null) {
         wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "gonimo-wifi-lock");
 
