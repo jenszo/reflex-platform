@@ -241,10 +241,9 @@ public class HaskellActivity extends Activity {
 
   @Override
   public void onBackPressed() {
-    finishAndRemoveTask();
-    // if(callbacks != 0)
-    //   haskellOnBackPressed(callbacks);
-    // }
+    if(callbacks != 0)
+      haskellOnBackPressed(callbacks);
+    }
   }
 
   @Override
