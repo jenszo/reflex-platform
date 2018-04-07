@@ -21,7 +21,6 @@ import android.content.Context;
 import android.os.PowerManager;
 import android.net.Uri;
 import android.app.NotificationManager;
-import android.R;
 
 // import android.app.Service;
 // import android.os.IBinder;
@@ -29,6 +28,9 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.net.wifi.WifiManager.WifiLock;
 import android.net.wifi.WifiManager;
+import android.content.pm.PackageManager;
+import com.gonimo.baby.R;
+import com.gonimo.baby.GonimoRunning;
 
 public class HaskellActivity extends Activity {
   public native int haskellStartMain(SynchronousQueue<Long> setCallbacks);
@@ -115,30 +117,42 @@ public class HaskellActivity extends Activity {
       }
   }
 
-    // private void showRunningNotification() {
-    //     Intent intent = new Intent(this, HaskellActivity.class);
-    //     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+    private void showRunningNotification() {
+        Intent intent = new Intent(this, HaskellActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-    //     Notification notification =
-    //         new Notification.Builder(this)
-    //         .setSmallIcon(R.drawable.ic_menu_camera)
-    //         .setContentTitle("Gonimo running")
-    //         .setContentText("I18N Taking care of your kids.")
-    //         .setContentIntent(pendingIntent)
-    //         .build();
-    //     // notification.flags = Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT | 64; // Is foreground notification. (Constant not available on earlier Androids)
-    //     NotificationManager notificationManager = getSystemService(NotificationManager.class);
-    //     notificationManager.notify(notificationId, notification);
-    // }
+        Intent stopIntent = new Intent(this, HaskellActivity.class);
+        stopIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        stopIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        stopIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        stopIntent.putExtra("com.gonimo.baby.stopIt", true);
+        PendingIntent stopPending = PendingIntent.getActivity(this, 1, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification notification =
+            new Notification.Builder(this)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle("Gonimo running")
+            // .setContentText("I18N Taking care of your kids.")
+            .setContentIntent(pendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopPending)
+            .setDeleteIntent(stopPending)
+            .build();
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.notify(notificationId, notification);
+    }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    // showRunningNotification();
     askIgnoreBatteryOptimizations();
     // We can't call finish() in the constructor, as it will have no effect, so
     // we call it here whenever we reach this code without having hit
     // 'continueWithCallbacks'
+
+    Intent serviceIntent = new Intent(this, GonimoRunning.class);
+    startService(serviceIntent);
+    showRunningNotification();
+
     grabWakeLock();
 
     if(callbacks == 0) {
@@ -212,7 +226,6 @@ public class HaskellActivity extends Activity {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    // stopService(serviceIntent);
     if(callbacks != 0) {
       haskellOnDestroy(callbacks);
     }
@@ -239,6 +252,11 @@ public class HaskellActivity extends Activity {
   @Override
   public void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
+    if(intent != null && intent.getExtras() != null && intent.getExtras().containsKey("com.gonimo.baby.stopIt")) {
+        Log.d("HaskellActivity", "stopIt requested ... stopping");
+        finishAndRemoveTask();
+        return;
+    }
     if(callbacks != 0 && intent != null && intent.getData() != null && intent.getAction() != null) {
       haskellOnNewIntent(callbacks, intent.getAction(), intent.getDataString()); //TODO: Use a more canonical way of passing this data - i.e. pass the Intent and let the Haskell side get the data out with JNI
     }
@@ -333,36 +351,8 @@ public class HaskellActivity extends Activity {
 
   private HashMap<Integer, PermissionRequest> permissionRequests;
   private int nextRequestCode = 0;
-  final static int notificationId = 31415926;
+  final public static int notificationId = 31415926;
   // private Intent serviceIntent;
   private WakeLock wakeLock;
   private WifiLock wifiLock;
 }
-
-// class HaskellService extends Service {
-
-
-//     @Override
-//     public int onStartCommand(Intent intent, int flags, int startId) {
-//         super.onStartCommand(intent, flags, startId);
-//         Intent notificationIntent = new Intent(this, HaskellActivity.class);
-
-//         Notification notification =
-//             new Notification.Builder(this)
-//             .setContentTitle("Gonimo running")
-//             .setContentText("Gonimo still running")
-//             .build();
-
-//         startForeground(1, notification);
-//         // If we get killed, after returning from here, restart
-//         return START_STICKY;
-//     }
-
-//     @Override
-//     public IBinder onBind(Intent intent) {
-//         // A client is binding to the service with bindService()
-//         return null;
-//     }
-
-
-// }
