@@ -8,6 +8,7 @@ import android.app.Service;
 import android.os.IBinder;
 import com.gonimo.baby.R;
 import systems.obsidian.HaskellActivity;
+import com.gonimo.baby.AndroidCompat;
 
 
 
@@ -52,7 +53,8 @@ public class GonimoRunning extends Service {
           .setContentTitle(getString(R.string.gonimo_stopped))
           .setAutoCancel(true)
           .build();
-      NotificationManager notificationManager = getSystemService(NotificationManager.class);
+      NotificationManager notificationManager = AndroidCompat.getNotificationManager(this);
+
       notificationManager.notify(HaskellActivity.notificationId, notification);
       // Now hopefully cancel:
       notificationManager.cancel(HaskellActivity.notificationId);

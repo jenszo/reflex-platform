@@ -31,6 +31,7 @@ import android.net.wifi.WifiManager;
 import android.content.pm.PackageManager;
 import com.gonimo.baby.R;
 import com.gonimo.baby.GonimoRunning;
+import com.gonimo.baby.AndroidCompat;
 
 public class HaskellActivity extends Activity {
   public native int haskellStartMain(SynchronousQueue<Long> setCallbacks);
@@ -133,7 +134,7 @@ public class HaskellActivity extends Activity {
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.stop_gonimo), stopPending)
             .setDeleteIntent(stopPending)
             .build();
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        NotificationManager notificationManager = AndroidCompat.getNotificationManager(this);
         notificationManager.notify(notificationId, notification);
     }
 
