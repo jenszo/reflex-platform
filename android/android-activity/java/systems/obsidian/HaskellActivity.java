@@ -100,16 +100,13 @@ public class HaskellActivity extends Activity {
             Log.d("HaskellActivity", "We are ignoring doze!!!!! Yeah!");
         else {
             Log.d("HaskellActivity", "We are not ignoring doze!!!!! Oh noooooooo!");
-            // Intent intentBattery = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             Intent intentBattery = new Intent( Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                                                , Uri.parse("package:" + getPackageName())
-                                                );
+                                             , Uri.parse("package:" + getPackageName())
+                                             );
             // Necessary to prevent it showing up (dead) in the task manager.
             intentBattery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
 
             startActivity(intentBattery);
-            // serviceIntent = new Intent(this, HaskellService.class);
-            // Context.startForegroundService(serviceIntent);
         }
       }
       catch (NoSuchMethodError e) {
