@@ -25,6 +25,10 @@ import android.R;
 
 // import android.app.Service;
 // import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.net.wifi.WifiManager.WifiLock;
+import android.net.wifi.WifiManager;
 
 public class HaskellActivity extends Activity {
   public native int haskellStartMain(SynchronousQueue<Long> setCallbacks);
@@ -132,6 +136,8 @@ public class HaskellActivity extends Activity {
     // We can't call finish() in the constructor, as it will have no effect, so
     // we call it here whenever we reach this code without having hit
     // 'continueWithCallbacks'
+    grabWakeLock();
+
     if(callbacks == 0) {
       finish();
     } else {
@@ -141,6 +147,31 @@ public class HaskellActivity extends Activity {
       String intentAction = intent == null || intent.getAction() == null ? "" : intent.getAction();
       haskellOnCreateWithIntent(callbacks, intentAction, intentDataString); //TODO: Use a more canonical way of passing this data - i.e. pass the Intent and let the Haskell side get the data out with JNI
     }
+  }
+
+  private void grabWakeLock() {
+      PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+      if (powerManager != null) {
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                                                    "MyWakelockTag");
+        if (wakeLock != null)
+            wakeLock.acquire();
+      }
+
+      WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+      if (wifiManager != null) {
+        wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "gonimo-wifi-lock");
+
+        if (wifiLock != null)
+            wifiLock.acquire();
+      }
+  }
+
+  private void releaseWakeLock() {
+      if(wakeLock != null)
+          wakeLock.release();
+      if(wifiLock != null)
+          wifiLock.release();
   }
 
   @Override
@@ -182,6 +213,7 @@ public class HaskellActivity extends Activity {
     if(callbacks != 0) {
       haskellOnDestroy(callbacks);
     }
+    releaseWakeLock();
     //TODO: Should we call hs_exit somehow here?
     android.os.Process.killProcess(android.os.Process.myPid()); //TODO: Properly handle the process surviving between invocations which means that the Haskell RTS needs to not be initialized twice.
   }
@@ -300,6 +332,8 @@ public class HaskellActivity extends Activity {
   private int nextRequestCode = 0;
   final static int notificationId = 31415926;
   // private Intent serviceIntent;
+  private WakeLock wakeLock;
+  private WifiLock wifiLock;
 }
 
 // class HaskellService extends Service {
