@@ -102,6 +102,9 @@ public class HaskellActivity extends Activity {
             Intent intentBattery = new Intent( Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
                                                 , Uri.parse("package:" + getPackageName())
                                                 );
+            // Necessary to prevent it showing up (dead) in the task manager.
+            intentBattery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+
             startActivity(intentBattery);
             // serviceIntent = new Intent(this, HaskellService.class);
             // Context.startForegroundService(serviceIntent);
