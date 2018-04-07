@@ -240,7 +240,7 @@ public class HaskellActivity extends Activity {
 
   @Override
   public void onBackPressed() {
-    if(callbacks != 0)
+    if(callbacks != 0) {
       haskellOnBackPressed(callbacks);
     }
   }
