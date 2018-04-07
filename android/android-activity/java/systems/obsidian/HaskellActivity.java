@@ -128,10 +128,9 @@ public class HaskellActivity extends Activity {
         Notification notification =
             new Notification.Builder(this)
             .setSmallIcon(R.drawable.ic_launcher)
-            .setContentTitle("Gonimo running")
-            // .setContentText("I18N Taking care of your kids.")
+            .setContentTitle(getString(R.string.gonimo_running))
             .setContentIntent(pendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopPending)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.stop_gonimo), stopPending)
             .setDeleteIntent(stopPending)
             .build();
         NotificationManager notificationManager = getSystemService(NotificationManager.class);

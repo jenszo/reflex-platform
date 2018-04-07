@@ -49,8 +49,7 @@ public class GonimoRunning extends Service {
       Notification notification =
           new Notification.Builder(this)
           .setSmallIcon(R.drawable.ic_launcher)
-          .setContentTitle("Gonimo stopped")
-          .setContentText("I18N Your kids are on their own.")
+          .setContentTitle(getString(R.string.gonimo_stopped))
           .setAutoCancel(true)
           .build();
       NotificationManager notificationManager = getSystemService(NotificationManager.class);
