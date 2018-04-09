@@ -115,28 +115,42 @@ public class HaskellActivity extends Activity {
       }
   }
 
-    private void showRunningNotification() {
-        Intent intent = new Intent(this, HaskellActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+  private void showRunningNotification() {
+      Notification.Builder templ =
+          new Notification.Builder(this)
+          .setSmallIcon(R.drawable.ic_launcher)
+          .setContentTitle(getString(R.string.gonimo_running));
+      showActionNotification(templ);
+  }
 
-        Intent stopIntent = new Intent(this, HaskellActivity.class);
-        stopIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        stopIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        stopIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        stopIntent.putExtra("com.gonimo.baby.stopIt", true);
-        PendingIntent stopPending = PendingIntent.getActivity(this, 1, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+  private void showStoppedWarningNotification() {
+      Notification.Builder templ =
+          new Notification.Builder(this)
+          .setSmallIcon(android.R.drawable.stat_sys_warning)
+          .setContentTitle(getString(R.string.gonimo_must_run_in_the_foreground))
+          .setContentText(getString(R.string.please_switch_back_to_gonimo));
+      showActionNotification(templ);
+  }
 
-        Notification notification =
-            new Notification.Builder(this)
-            .setSmallIcon(R.drawable.ic_launcher)
-            .setContentTitle(getString(R.string.gonimo_running))
-            .setContentIntent(pendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.stop_gonimo), stopPending)
-            .setDeleteIntent(stopPending)
-            .build();
-        NotificationManager notificationManager = AndroidCompat.getNotificationManager(this);
-        notificationManager.notify(notificationId, notification);
-    }
+  private void showActionNotification(Notification.Builder templ) {
+    Intent intent = new Intent(this, HaskellActivity.class);
+    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+    Intent stopIntent = new Intent(this, HaskellActivity.class);
+    stopIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    stopIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    stopIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+    stopIntent.putExtra("com.gonimo.baby.stopIt", true);
+    PendingIntent stopPending = PendingIntent.getActivity(this, 1, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+    Notification notification = templ
+        .setContentIntent(pendingIntent)
+        .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.stop_gonimo), stopPending)
+        .setDeleteIntent(stopPending)
+        .build();
+    NotificationManager notificationManager = AndroidCompat.getNotificationManager(this);
+    notificationManager.notify(notificationId, notification);
+  }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -148,7 +162,6 @@ public class HaskellActivity extends Activity {
 
     Intent serviceIntent = new Intent(this, GonimoRunning.class);
     startService(serviceIntent);
-    showRunningNotification();
 
     grabWakeLock();
 
@@ -191,6 +204,7 @@ public class HaskellActivity extends Activity {
   @Override
   public void onStart() {
     super.onStart();
+    showRunningNotification();
     if(callbacks != 0) {
       haskellOnStart(callbacks);
     }
@@ -215,6 +229,7 @@ public class HaskellActivity extends Activity {
   @Override
   public void onStop() {
     super.onStop();
+    showStoppedWarningNotification();
     if(callbacks != 0) {
       haskellOnStop(callbacks);
     }
