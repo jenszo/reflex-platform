@@ -21,6 +21,7 @@ import android.content.Context;
 import android.os.PowerManager;
 import android.net.Uri;
 import android.app.NotificationManager;
+import android.webkit.ValueCallback;
 
 // import android.app.Service;
 // import android.os.IBinder;
@@ -256,6 +257,23 @@ public class HaskellActivity extends Activity {
 
   @Override
   public void onBackPressed() {
+    if(backEventListener != null) {
+        backEventListener.backButtonClicked(new ValueCallback<String>() {
+                public void onReceiveValue (String value) {
+                    Log.i("reflex", "onReceiveValue (HaskellActivity) called: '" + value + "'");
+                    if(!value.equals("true")) {
+                        runOnUiThread(new Runnable() {
+                                @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                                @Override
+                                public void run() {
+                                    finishAndRemoveTask();
+                                }
+                            });
+                    }
+                }
+            });
+        return;
+    }
     if(callbacks != 0) {
       haskellOnBackPressed(callbacks);
     }
@@ -361,6 +379,16 @@ public class HaskellActivity extends Activity {
           });
   }
 
+  public interface BackEventListener {
+      // True if handled, false if not handled.
+      void backButtonClicked(ValueCallback<String> handled);
+  }
+
+  public void setBackEventListener(BackEventListener l) {
+      backEventListener = l;
+  }
+
+  private BackEventListener backEventListener = null;
   private HashMap<Integer, PermissionRequest> permissionRequests;
   private int nextRequestCode = 0;
   final public static int notificationId = 31415926;
