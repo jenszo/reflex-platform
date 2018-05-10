@@ -21,7 +21,6 @@ import android.content.Context;
 import android.os.PowerManager;
 import android.net.Uri;
 import android.app.NotificationManager;
-import android.webkit.ValueCallback;
 
 // import android.app.Service;
 // import android.os.IBinder;
@@ -259,13 +258,7 @@ public class HaskellActivity extends Activity {
   @Override
   public void onBackPressed() {
     if(backEventListener != null) {
-        backEventListener.backButtonClicked(new ValueCallback<String>() {
-                public void onReceiveValue (String value) {
-                    if(!value.equals("true")) {
-                        finishAndRemoveTask();
-                    }
-                }
-            });
+        backEventListener.backButtonClicked();
         return;
     }
     if(callbacks != 0) {
@@ -374,8 +367,7 @@ public class HaskellActivity extends Activity {
   }
 
   public interface BackEventListener {
-      // True if handled, false if not handled.
-      void backButtonClicked(ValueCallback<String> handled);
+      void backButtonClicked();
   }
 
   public void setBackEventListener(BackEventListener l) {
