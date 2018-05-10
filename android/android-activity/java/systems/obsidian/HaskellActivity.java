@@ -243,6 +243,7 @@ public class HaskellActivity extends Activity {
       haskellOnDestroy(callbacks);
     }
     releaseWakeLock();
+    GonimoRunning.cancelRunningNotification(this); // Don't know why this is necessary. We have a service that should have his onTaskRemoved triggered.
     //TODO: Should we call hs_exit somehow here?
     android.os.Process.killProcess(android.os.Process.myPid()); //TODO: Properly handle the process surviving between invocations which means that the Haskell RTS needs to not be initialized twice.
   }
@@ -260,15 +261,8 @@ public class HaskellActivity extends Activity {
     if(backEventListener != null) {
         backEventListener.backButtonClicked(new ValueCallback<String>() {
                 public void onReceiveValue (String value) {
-                    Log.i("reflex", "onReceiveValue (HaskellActivity) called: '" + value + "'");
                     if(!value.equals("true")) {
-                        runOnUiThread(new Runnable() {
-                                @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-                                @Override
-                                public void run() {
-                                    finishAndRemoveTask();
-                                }
-                            });
+                        finishAndRemoveTask();
                     }
                 }
             });

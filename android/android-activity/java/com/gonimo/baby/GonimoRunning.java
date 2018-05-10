@@ -1,6 +1,7 @@
 package com.gonimo.baby;
 
 import android.content.Intent;
+import android.content.Context;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Notification;
@@ -34,26 +35,26 @@ public class GonimoRunning extends Service {
 
   @Override
   public void onDestroy() {
-      cancelRunningNotification();
+      cancelRunningNotification(this);
   }
 
   @Override
   public void onTaskRemoved(Intent rootIntent) {
-      cancelRunningNotification();
+      cancelRunningNotification(this);
       stopSelf();
   }
 
 
-  private void cancelRunningNotification() {
+  public static void cancelRunningNotification(Context c) {
       // Update with stopped message first, in case cancel does not work.
       // During testing, cancel often just had no effect ...
       Notification notification =
-          new Notification.Builder(this)
+          new Notification.Builder(c)
           .setSmallIcon(R.drawable.ic_launcher)
-          .setContentTitle(getString(R.string.gonimo_stopped))
+          .setContentTitle(c.getString(R.string.gonimo_stopped))
           .setAutoCancel(true)
           .build();
-      NotificationManager notificationManager = AndroidCompat.getNotificationManager(this);
+      NotificationManager notificationManager = AndroidCompat.getNotificationManager(c);
 
       notificationManager.notify(HaskellActivity.notificationId, notification);
       // Now hopefully cancel:
