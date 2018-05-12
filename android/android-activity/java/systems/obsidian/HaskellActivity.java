@@ -115,6 +115,7 @@ public class HaskellActivity extends Activity {
       }
   }
 
+    // TODO: Delete, as we no longer show running notifications.
   private void showRunningNotification() {
       Notification.Builder templ =
           new Notification.Builder(this)
@@ -123,7 +124,7 @@ public class HaskellActivity extends Activity {
       showActionNotification(templ);
   }
 
-  private void showStoppedWarningNotification() {
+  public void showStoppedWarningNotification() {
       Notification.Builder templ =
           new Notification.Builder(this)
           .setSmallIcon(android.R.drawable.stat_sys_warning)
@@ -204,7 +205,8 @@ public class HaskellActivity extends Activity {
   @Override
   public void onStart() {
     super.onStart();
-    showRunningNotification();
+    // Warning notification gets shown via Haskell, if a stream or something is running, cancel it now.
+    GonimoRunning.cancelRunningNotification(this);
     if(callbacks != 0) {
       haskellOnStart(callbacks);
     }
@@ -229,7 +231,6 @@ public class HaskellActivity extends Activity {
   @Override
   public void onStop() {
     super.onStop();
-    showStoppedWarningNotification();
     if(callbacks != 0) {
       haskellOnStop(callbacks);
     }

@@ -46,17 +46,8 @@ public class GonimoRunning extends Service {
 
 
   public static void cancelRunningNotification(Context c) {
-      // Update with stopped message first, in case cancel does not work.
-      // During testing, cancel often just had no effect ...
-      Notification notification =
-          new Notification.Builder(c)
-          .setSmallIcon(R.drawable.ic_launcher)
-          .setContentTitle(c.getString(R.string.gonimo_stopped))
-          .setAutoCancel(true)
-          .build();
       NotificationManager notificationManager = AndroidCompat.getNotificationManager(c);
 
-      notificationManager.notify(HaskellActivity.notificationId, notification);
       // Now hopefully cancel:
       notificationManager.cancel(HaskellActivity.notificationId);
   }
